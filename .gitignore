@@ -1,0 +1,34 @@
+# 核心隔离铁律：音视频媒体二进制文件绝不入库
+output/
+temp/
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mp3
+*.wav
+*.aac
+*.flac
+
+# 临时分镜图片与切片（由代码按需生成，不签入仓库）
+temp_frames/
+temp_scenes/
+scene*.png
+
+# Python 环境与缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+.env.*
+
+# 系统与 IDE 文件
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
