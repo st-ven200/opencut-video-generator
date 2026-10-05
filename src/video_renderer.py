@@ -15,7 +15,7 @@ def get_audio_duration(audio_path):
     except Exception:
         return 32.0
 
-def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png, audio_mp3, output_mp4):
+def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png, scene5_png, audio_mp3, output_mp4):
     os.makedirs(os.path.dirname(os.path.abspath(output_mp4)), exist_ok=True)
     temp_dir = os.path.dirname(os.path.abspath(audio_mp3))
     
@@ -28,36 +28,40 @@ def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png,
     whoosh_path = generate_sfx_whoosh(os.path.join(temp_dir, "sfx_whoosh.wav"))
     pop_path = generate_sfx_pop(os.path.join(temp_dir, "sfx_pop.wav"))
 
-    # 动态分配 4 个场景的时长占比
-    t1 = round(total_dur * 0.15, 2)
-    t2 = round(total_dur * 0.50, 2)
-    t3 = round(total_dur * 0.80, 2)
-    t4 = round(total_dur, 2)
+    # 动态分配 5 个场景的时长占比 (Intro: 10%, 传统I/O: 30%, 零拷贝mmap/sendfile: 30%, 4大底座: 18%, 选型对比: 12%)
+    t1 = round(total_dur * 0.10, 2)
+    t2 = round(total_dur * 0.40, 2)
+    t3 = round(total_dur * 0.70, 2)
+    t4 = round(total_dur * 0.88, 2)
+    t5 = round(total_dur, 2)
 
     t1_ms = int(t1 * 1000)
     t2_ms = int(t2 * 1000)
     t3_ms = int(t3 * 1000)
+    t4_ms = int(t4 * 1000)
 
     filter_complex = (
         f"[0:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v0];"
         f"[1:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v1];"
-        f"[v0][v1]overlay=(W-w)/2:280[v_scene1];"
+        f"[v0][v1]overlay=(W-w)/2:250[v_scene1];"
         f"[2:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v_scene2];"
-        f"[3:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v3];"
-        f"[v3]drawbox=x='265+(w-370)*(t-{t2})/({t3-t2})':y=650:w=4:h=310:color=#f85149@1.0:t=fill[v_scene3];"
+        f"[3:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v_scene3];"
         f"[4:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v_scene4];"
+        f"[5:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v_scene5];"
         f"[v_scene1]trim=start=0:end={t1},setpts=PTS-STARTPTS[part1];"
         f"[v_scene2]trim=start={t1}:end={t2},setpts=PTS-STARTPTS[part2];"
         f"[v_scene3]trim=start={t2}:end={t3},setpts=PTS-STARTPTS[part3];"
         f"[v_scene4]trim=start={t3}:end={t4},setpts=PTS-STARTPTS[part4];"
-        f"[part1][part2][part3][part4]concat=n=4:v=1:a=0[v_concat];"
+        f"[v_scene5]trim=start={t4}:end={t5},setpts=PTS-STARTPTS[part5];"
+        f"[part1][part2][part3][part4][part5]concat=n=5:v=1:a=0[v_concat];"
         f"[v_concat]format=yuv420p[v_out];"
-        f"[5:a]volume=1.0[a_voice];"
-        f"[6:a]volume=0.10,atrim=start=0:end={t4}[a_bgm];"
-        f"[7:a]adelay={t1_ms}|{t1_ms},volume=0.7[sfx1];"
-        f"[7:a]adelay={t2_ms}|{t2_ms},volume=0.7[sfx2];"
-        f"[8:a]adelay={t3_ms}|{t3_ms},volume=0.7[sfx3];"
-        f"[a_voice][a_bgm][sfx1][sfx2][sfx3]amix=inputs=5:duration=first:dropout_transition=2[a_out]"
+        f"[6:a]volume=1.0[a_voice];"
+        f"[7:a]volume=0.10,atrim=start=0:end={t5}[a_bgm];"
+        f"[8:a]adelay={t1_ms}|{t1_ms},volume=0.7[sfx1];"
+        f"[8:a]adelay={t2_ms}|{t2_ms},volume=0.7[sfx2];"
+        f"[9:a]adelay={t3_ms}|{t3_ms},volume=0.7[sfx3];"
+        f"[9:a]adelay={t4_ms}|{t4_ms},volume=0.7[sfx4];"
+        f"[a_voice][a_bgm][sfx1][sfx2][sfx3][sfx4]amix=inputs=6:duration=first:dropout_transition=2[a_out]"
     )
 
     cmd = [
@@ -67,6 +71,7 @@ def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png,
         '-loop', '1', '-i', scene2_png,
         '-loop', '1', '-i', scene3_png,
         '-loop', '1', '-i', scene4_png,
+        '-loop', '1', '-i', scene5_png,
         '-i', audio_mp3,
         '-i', bgm_path,
         '-i', whoosh_path,
@@ -84,7 +89,7 @@ def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png,
         output_mp4
     ]
 
-    print("Running FFmpeg rendering command with multi-track BGM and SFX...")
+    print("Running FFmpeg rendering command with 5 detailed scenes, BGM and SFX...")
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         print("FFmpeg stderr:", res.stderr)

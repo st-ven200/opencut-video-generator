@@ -33,187 +33,156 @@ def draw_waveform(draw, x, y, w, h, color):
     draw.polygon(points, fill=color)
 
 def build_scene1(output_path):
+    """场景1: 开篇 Hook - Kafka 为什么这么快"""
     img = Image.new('RGBA', (WIDTH, HEIGHT), COLORS['bg'])
     draw = ImageDraw.Draw(img)
 
-    f_huge = get_font(68)
+    f_huge = get_font(64)
     f_sub = get_font(26)
     f_badge = get_font(18)
 
-    draw_capsule(draw, (WIDTH // 2 - 160, 480, 320, 44), "100% 开源 · 纯云端/无头渲染", f_badge, COLORS['accent_blue'], (20, 35, 60, 255), COLORS['accent_blue'])
+    draw_capsule(draw, (WIDTH // 2 - 190, 440, 380, 44), "100% 开源 · B站硬核架构解密", f_badge, COLORS['accent_blue'], (20, 35, 60, 255), COLORS['accent_blue'])
     
-    title = "OpenCut 开源剪辑自动化生成器"
+    title = "Kafka 为什么这么快？"
     bbox = f_huge.getbbox(title)
-    draw.text(((WIDTH - (bbox[2] - bbox[0])) // 2, 550), title, font=f_huge, fill=COLORS['text_main'])
+    draw.text(((WIDTH - (bbox[2] - bbox[0])) // 2, 510), title, font=f_huge, fill=COLORS['text_main'])
 
-    sub = "深挖使用方法与自动化全流程 · 为 AI Agent 深度设计的端到端音视频管线"
+    sub = "百万级吞吐量的终极奥秘：零拷贝原理 (mmap/sendfile) 与 RocketMQ 架构抉择"
     bbox_sub = f_sub.getbbox(sub)
-    draw.text(((WIDTH - (bbox_sub[2] - bbox_sub[0])) // 2, 650), sub, font=f_sub, fill=COLORS['text_sub'])
+    draw.text(((WIDTH - (bbox_sub[2] - bbox_sub[0])) // 2, 620), sub, font=f_sub, fill=COLORS['text_sub'])
 
     img.save(output_path)
     return output_path
 
 def build_scene2(output_path):
-    """场景2: 命令行 CLI 实战与核心使用方法"""
+    """场景2: 传统 I/O 痛点 (4次上下文切换 + 4次内存拷贝)"""
     img = Image.new('RGBA', (WIDTH, HEIGHT), COLORS['bg'])
     draw = ImageDraw.Draw(img)
 
     f_title = get_font(32)
     f_desc = get_font(18)
-    f_mono = get_font(15)
     f_badge = get_font(14)
     f_card_t = get_font(20)
-    f_card_d = get_font(15)
+    f_mono = get_font(15)
 
-    draw_capsule(draw, (80, 50, 110, 30), "使用方法", f_badge, COLORS['accent_green'], (20, 45, 30, 255), COLORS['accent_green'])
-    draw.text((205, 48), "命令行 CLI 实战与快捷指令调用", font=f_title, fill=COLORS['text_main'])
-    draw.text((80, 92), "无需物理显卡与图形界面，一行命令极速触发云端旁白合成与 1080P 视频渲染", font=f_desc, fill=COLORS['text_sub'])
+    draw_capsule(draw, (80, 50, 160, 30), "传统 I/O 瓶颈", f_badge, COLORS['accent_red'], (40, 15, 15, 255), COLORS['accent_red'])
+    draw.text((255, 48), "传统数据传输路径 (4次上下文切换 + 4次内存拷贝)", font=f_title, fill=COLORS['text_main'])
+    draw.text((80, 92), "数据必须在内核态与用户态之间来回复制，极其消耗 CPU 资源与内存带宽", font=f_desc, fill=COLORS['text_sub'])
 
-    # 左侧：CLI 终端模拟
-    panel_left = [80, 130, 80 + 960, 130 + 870]
-    draw.rounded_rectangle(panel_left, radius=10, fill=COLORS['panel'], outline=COLORS['panel_border'], width=1)
-    draw.rectangle([80, 130, 80 + 960, 130 + 38], fill=(18, 20, 24, 255))
-    draw.line([80, 130 + 38, 80 + 960, 130 + 38], fill=COLORS['panel_border'], width=1)
+    # 上区域：用户态内存 (User Space)
+    user_space = [80, 130, 80 + 1760, 130 + 330]
+    draw.rounded_rectangle(user_space, radius=10, fill=COLORS['panel'], outline=COLORS['panel_border'], width=1)
+    draw.text((110, 150), "用户态空间 (User Space Application Memory)", font=f_card_t, fill=COLORS['text_main'])
+    draw_capsule(draw, (1500, 150, 150, 28), "应用进程内存", f_badge, COLORS['accent_blue'], (20, 35, 60, 255))
     
-    draw.ellipse([95, 144, 107, 156], fill=(255, 95, 87, 255))
-    draw.ellipse([115, 144, 127, 156], fill=(254, 188, 46, 255))
-    draw.ellipse([135, 144, 147, 156], fill=(40, 200, 64, 255))
-    draw.text((160, 140), "bash: ~/opencut-video-generator", font=f_badge, fill=COLORS['text_muted'])
+    app_buf = [580, 220, 580 + 760, 220 + 180]
+    draw.rounded_rectangle(app_buf, radius=8, fill=(25, 35, 55, 255), outline=COLORS['accent_blue'], width=1)
+    draw.text((610, 240), "用户态应用程序缓冲区 (User Application Buffer)", font=f_mono, fill=COLORS['text_main'])
+    draw.text((610, 290), "② 从内核读缓冲区拷贝到应用内存  |  ③ 从应用内存拷贝到 Socket 缓冲区", font=f_mono, fill=COLORS['text_sub'])
 
-    cli_lines = [
-        ("# 1. 安装核心音视频依赖", COLORS['text_muted']),
-        ("$ pip install -r requirements.txt", COLORS['accent_cyan']),
-        ("[INFO] 成功安装 edge-tts>=6.1.9, Pillow>=10.0.0, requests", COLORS['accent_green']),
-        ("", COLORS['text_main']),
-        ("# 2. 默认模式一键合成演示视频", COLORS['text_muted']),
-        ("$ python3 generate.py", COLORS['accent_cyan']),
-        (">>> [1/4] 合成云端旁白语音 (Edge-TTS zh-CN-YunxiNeural)...", COLORS['text_sub']),
-        (">>> [2/4] 渲染多场景高保真 1080P 分镜 (Pillow / 25FPS)...", COLORS['text_sub']),
-        (">>> [3/4] 调度 FFmpeg 复合滤镜图合成多轨道视频...", COLORS['text_sub']),
-        ("🎉 视频生成完成！输出路径: output/opencut_tutorial.mp4", COLORS['accent_green']),
-        ("", COLORS['text_main']),
-        ("# 3. 高级命令行参数说明", COLORS['text_muted']),
-        ("$ python3 generate.py \\", COLORS['accent_cyan']),
-        ("    --text \"大家好，这是自定义的一键生成技术视频！\" \\", COLORS['accent_blue']),
-        ("    --output \"output/custom_demo.mp4\" \\", COLORS['accent_purple']),
-        ("    --temp-dir \"temp_build\"", COLORS['accent_amber'])
-    ]
-    cy = 185
-    for line, color in cli_lines:
-        draw.text((105, cy), line, font=f_mono, fill=color)
-        cy += 45
+    # 下区域：内核态空间 (Kernel Space)
+    kernel_space = [80, 500, 80 + 1760, 500 + 510]
+    draw.rounded_rectangle(kernel_space, radius=10, fill=(15, 20, 25, 255), outline=COLORS['card_border'], width=1)
+    draw.text((110, 520), "内核态空间与物理硬件 (Kernel Space & Hardware)", font=f_card_t, fill=COLORS['text_main'])
 
-    # 右侧：CLI 参数详解卡片
-    cards = [
-        ("参数一: --text", "旁白脚本文本", "支持任意长文本输入，自动调用 Edge-TTS 高效合成自然专业神经语音", COLORS['accent_blue']),
-        ("参数二: --output", "导出 MP4 路径", "指定最终合成的 1080P/25FPS H.264+AAC 视频文件路径", COLORS['accent_purple']),
-        ("参数三: --temp-dir", "临时切片缓存", "隔离保存对齐音频、分镜 PNG 图片及临时 FFmpeg 图层", COLORS['accent_green'])
-    ]
+    # 磁盘 vs 内核 Read Buffer vs Socket Buffer vs 网卡
+    box_disk = [110, 580, 110 + 360, 580 + 380]
+    draw.rounded_rectangle(box_disk, radius=8, fill=(25, 20, 20, 255), outline=COLORS['card_border'], width=1)
+    draw.text((130, 600), "磁盘物理存储 (Disk)", font=f_card_t, fill=COLORS['accent_red'])
+    draw.text((130, 650), "① DMA 拷贝", font=f_mono, fill=COLORS['text_sub'])
 
-    rx = 1070
-    ry = 130
-    rw = 770
-    rh = 265
-    for title, badge, desc, col in cards:
-        draw.rounded_rectangle([rx, ry, rx + rw, ry + rh], radius=10, fill=COLORS['panel'], outline=COLORS['card_border'], width=1)
-        draw.text((rx + 30, ry + 25), title, font=f_card_t, fill=COLORS['text_main'])
-        draw_capsule(draw, (rx + rw - 150, ry + 25, 120, 28), badge, f_badge, col, (20, 30, 45, 255), col)
-        draw.line([rx + 30, ry + 70, rx + rw - 30, ry + 70], fill=COLORS['card_border'], width=1)
-        draw.text((rx + 30, ry + 95), desc, font=f_card_d, fill=COLORS['text_sub'])
-        ry += rh + 38
+    box_read = [530, 580, 530 + 420, 580 + 380]
+    draw.rounded_rectangle(box_read, radius=8, fill=(20, 35, 30, 255), outline=COLORS['accent_green'], width=1)
+    draw.text((550, 600), "内核读缓冲区 (Read Buffer)", font=f_card_t, fill=COLORS['accent_green'])
+    draw.text((550, 650), "PageCache 页面缓存", font=f_mono, fill=COLORS['text_sub'])
+
+    box_socket = [1000, 580, 1000 + 420, 580 + 380]
+    draw.rounded_rectangle(box_socket, radius=8, fill=(30, 25, 40, 255), outline=COLORS['accent_purple'], width=1)
+    draw.text((1020, 600), "Socket 发送缓冲区", font=f_card_t, fill=COLORS['accent_purple'])
+    draw.text((1020, 650), "TCP 发送队列", font=f_mono, fill=COLORS['text_sub'])
+
+    box_nic = [1470, 580, 1470 + 340, 580 + 380]
+    draw.rounded_rectangle(box_nic, radius=8, fill=(20, 35, 50, 255), outline=COLORS['accent_cyan'], width=1)
+    draw.text((1490, 600), "物理网卡 (NIC)", font=f_card_t, fill=COLORS['accent_cyan'])
+    draw.text((1490, 650), "④ DMA 发送网络", font=f_mono, fill=COLORS['text_sub'])
 
     img.save(output_path)
     return output_path
 
 def build_scene3(output_path):
-    """场景3: 实景多轨道时间轴与 AI 操控"""
+    """场景3: 零拷贝原理 (mmap 内存映射 vs sendfile 物理直传)"""
     img = Image.new('RGBA', (WIDTH, HEIGHT), COLORS['bg'])
     draw = ImageDraw.Draw(img)
 
-    f_title = get_font(30)
+    f_title = get_font(32)
     f_desc = get_font(18)
-    f_mono = get_font(14)
     f_badge = get_font(14)
-    f_ui = get_font(13)
+    f_card_t = get_font(22)
+    f_card_d = get_font(16)
+    f_mono = get_font(15)
 
-    draw_capsule(draw, (80, 50, 140, 30), "剪辑器引擎", f_badge, COLORS['accent_purple'], (35, 25, 55, 255), COLORS['accent_purple'])
-    draw.text((235, 48), "模块化多轨道时间轴与 AI 自动化操控", font=f_title, fill=COLORS['text_main'])
-    draw.text((80, 92), "通过标准 Web/桌面端渲染底座，AI Agent 可通过 MCP 协议毫秒级操作轨道与切片", font=f_desc, fill=COLORS['text_sub'])
+    draw_capsule(draw, (80, 50, 140, 30), "零拷贝原理", f_badge, COLORS['accent_blue'], (20, 35, 60, 255), COLORS['accent_blue'])
+    draw.text((235, 48), "mmap 内存映射 vs sendfile DMA 物理直传网络卡", font=f_title, fill=COLORS['text_main'])
+    draw.text((80, 92), "通过 sendfile 系统调用与 DMA 散射聚集，彻底实现 CPU 零内存拷贝与 2 次上下文切换", font=f_desc, fill=COLORS['text_sub'])
 
-    # 左侧：AI Agent 终端
-    panel_left = [80, 130, 80 + 820, 130 + 440]
-    draw.rounded_rectangle(panel_left, radius=10, fill=COLORS['panel'], outline=COLORS['panel_border'], width=1)
-    draw.rectangle([80, 130, 80 + 820, 130 + 38], fill=(18, 20, 24, 255))
-    draw.line([80, 130 + 38, 80 + 820, 130 + 38], fill=COLORS['panel_border'], width=1)
-    
-    draw.ellipse([95, 144, 107, 156], fill=(255, 95, 87, 255))
-    draw.ellipse([115, 144, 127, 156], fill=(254, 188, 46, 255))
-    draw.ellipse([135, 144, 147, 156], fill=(40, 200, 64, 255))
-    draw.text((160, 140), "agent-terminal: ~/opencut-mcp-executor", font=f_ui, fill=COLORS['text_muted'])
+    # 左面板：mmap (内存映射)
+    mmap_box = [80, 140, 80 + 860, 140 + 870]
+    draw.rounded_rectangle(mmap_box, radius=10, fill=COLORS['panel'], outline=COLORS['panel_border'], width=1)
+    draw.text((110, 165), "方案一：mmap 内存映射 (Memory Mapping)", font=f_card_t, fill=COLORS['text_main'])
+    draw_capsule(draw, (720, 165, 180, 28), "3次拷贝 + 4次切换", f_badge, COLORS['accent_amber'], (40, 30, 15, 255))
+    draw.line([110, 210, 910, 210], fill=COLORS['card_border'], width=1)
 
-    code_lines = [
-        ("> opencut-agent --action=auto-compose --input=article.md", COLORS['accent_cyan']),
-        ("[1/4] 解析文案分镜结构与语音权重... 耗时: 120ms", COLORS['text_sub']),
-        ("[2/4] 调用 edge-tts 生成对齐旁白音轨 (zh-CN-YunxiNeural)", COLORS['accent_green']),
-        ("[3/4] 触发 OpenCut 剪辑器 API: POST /api/timeline/import", COLORS['accent_blue']),
-        ("      -> 导入视频切片: scene_intro.mp4 (00:00:00 - 00:00:30)", COLORS['text_sub']),
-        ("      -> 导入波形音轨: narration.mp3 (振幅对齐完成)", COLORS['text_sub']),
-        ("      -> 动态插入逐字字幕层 (对齐精度: 10ms)", COLORS['text_sub']),
-        ("[4/4] 剪辑工程已就绪，正在实时预览渲染...", COLORS['accent_amber'])
+    mmap_points = [
+        ("· 虚拟内存映射", "用户态虚拟内存直接指向内核缓冲区地址", COLORS['accent_blue']),
+        ("· 省去 1 次 CPU 拷贝", "数据不需要从内核态复制到用户态应用内存", COLORS['accent_green']),
+        ("· 适用场景", "适合需要对数据进行小幅度修改或随机读写的场景", COLORS['text_sub'])
     ]
-    cy = 185
-    for line, color in code_lines:
-        draw.text((105, cy), line, font=f_mono, fill=color)
-        cy += 38
+    my = 230
+    for t_sub, desc_sub, col_sub in mmap_points:
+        draw.text((110, my), t_sub, font=f_mono, fill=col_sub)
+        draw.text((110, my + 30), desc_sub, font=f_card_d, fill=COLORS['text_sub'])
+        my += 80
 
-    # 右侧：视频监视窗口
-    panel_right = [930, 130, 930 + 910, 130 + 440]
-    draw.rounded_rectangle(panel_right, radius=10, fill=(10, 11, 14, 255), outline=COLORS['panel_border'], width=1)
-    draw.rounded_rectangle([945, 145, 945 + 880, 145 + 410], radius=8, fill=(18, 20, 25, 255), outline=(32, 36, 44, 255), width=1)
-    
-    draw_capsule(draw, (965, 165, 80, 26), "● REC", f_badge, COLORS['accent_red'], (40, 15, 15, 255), (100, 30, 30, 255))
-    draw.text((1060, 168), "CAM-1: 1920x1080 @ 60FPS", font=f_ui, fill=COLORS['text_muted'])
-    draw.text((945 + 880 - 130, 168), "00:00:14.28", font=f_ui, fill=COLORS['accent_cyan'])
-    
-    draw.ellipse([945 + 440 - 35, 145 + 205 - 35, 945 + 440 + 35, 145 + 205 + 35], fill=(30, 35, 45, 200), outline=COLORS['accent_blue'], width=2)
-    draw.polygon([(945 + 440 - 10, 145 + 205 - 18), (945 + 440 - 10, 145 + 205 + 18), (945 + 440 + 18, 145 + 205)], fill=COLORS['text_main'])
+    # mmap 架构示意
+    draw.rounded_rectangle([110, 500, 910, 970], radius=8, fill=(18, 22, 28, 255), outline=COLORS['card_border'], width=1)
+    draw.text((130, 520), "[磁盘] --> (DMA) --> [内核读缓冲区] ==== (虚拟内存映射) ====> [用户应用]", font=f_mono, fill=COLORS['accent_cyan'])
+    draw.text((130, 570), "                             || (CPU 拷贝)", font=f_mono, fill=COLORS['text_muted'])
+    draw.text((130, 620), "                             \\/ ", font=f_mono, fill=COLORS['text_muted'])
+    draw.text((130, 670), "                     [Socket 发送缓冲区] --> (DMA) --> [网卡]", font=f_mono, fill=COLORS['accent_purple'])
 
-    # 底部：多轨道时间轴面板
-    tl = [80, 595, 80 + 1760, 595 + 420]
-    draw.rounded_rectangle(tl, radius=10, fill=COLORS['panel'], outline=COLORS['panel_border'], width=1)
-    
-    # 时间轴控制工具栏
-    draw.rectangle([80, 595, 80 + 1760, 595 + 42], fill=(18, 20, 24, 255))
-    draw.line([80, 595 + 42, 80 + 1760, 595 + 42], fill=COLORS['panel_border'], width=1)
-    draw.text((105, 606), "时间轴编排区 (Timeline Tracks)", font=f_badge, fill=COLORS['text_main'])
-    draw.text((360, 606), "00:00:00", font=f_ui, fill=COLORS['text_muted'])
-    draw.text((800, 606), "00:00:10", font=f_ui, fill=COLORS['text_muted'])
-    draw.text((1240, 606), "00:00:20", font=f_ui, fill=COLORS['text_muted'])
-    draw.text((1680, 606), "00:00:30", font=f_ui, fill=COLORS['text_muted'])
+    # 右面板：sendfile (DMA 散射聚集物理直传)
+    sf_box = [980, 140, 980 + 860, 140 + 870]
+    draw.rounded_rectangle(sf_box, radius=10, fill=(15, 22, 20, 255), outline=COLORS['accent_green'], width=1)
+    draw.text((1010, 165), "方案二：sendfile 系统调用 (真正的零拷贝)", font=f_card_t, fill=COLORS['accent_green'])
+    draw_capsule(draw, (1610, 165, 200, 28), "0次 CPU 拷贝 + 2次切换", f_badge, COLORS['accent_green'], (20, 45, 30, 255))
+    draw.line([1010, 210, 1810, 210], fill=COLORS['card_border'], width=1)
 
-    tracks = [
-        ("视频轨 (Video 1)", 650, (35, 30, 55, 255), (80, 65, 130, 255), "clip_intro_4k.mp4 [00:00:00 - 00:00:30]", COLORS['accent_purple']),
-        ("音频轨 (Audio 1)", 760, (20, 35, 30, 255), (40, 90, 65, 255), "narration_yunxi_ai.mp3", COLORS['accent_green']),
-        ("字幕轨 (Subtitle)", 870, (25, 35, 50, 255), (50, 80, 130, 255), "AI 逐字对齐字幕流 (自动断句与换行)", COLORS['accent_cyan'])
+    sf_points = [
+        ("· Linux 2.4+ 内核优化", "使用 DMA Scatter-Gather 描述符句柄直传", COLORS['accent_green']),
+        ("· CPU 零内存拷贝", "数据直接从内核缓冲区传输至网卡，CPU 不参与搬运", COLORS['accent_cyan']),
+        ("· 极速网络吞吐", "上下文切换减少 50%，极致释放 CPU 算力与内存带宽", COLORS['accent_purple'])
     ]
+    sy = 230
+    for t_sub, desc_sub, col_sub in sf_points:
+        draw.text((1010, sy), t_sub, font=f_mono, fill=col_sub)
+        draw.text((1010, sy + 30), desc_sub, font=f_card_d, fill=COLORS['text_sub'])
+        sy += 80
 
-    for label, ty, bg_col, border_col, tag_text, tag_col in tracks:
-        draw.rounded_rectangle([100, ty, 250, ty + 90], radius=6, fill=(16, 18, 22, 255), outline=COLORS['card_border'], width=1)
-        draw.text((115, ty + 35), label, font=f_badge, fill=COLORS['text_main'])
-        
-        track_box = [265, ty, 1815, ty + 90]
-        draw.rounded_rectangle(track_box, radius=6, fill=bg_col, outline=border_col, width=1)
-        draw_capsule(draw, (280, ty + 12, 14, 14), "", f_badge, tag_col, tag_col)
-        draw.text((305, ty + 10), tag_text, font=f_ui, fill=COLORS['text_main'])
-        
-        if "Audio" in label:
-            draw_waveform(draw, 280, ty + 35, 1500, 45, (63, 185, 80, 180))
+    # sendfile 架构示意
+    draw.rounded_rectangle([1010, 500, 1810, 970], radius=8, fill=(12, 28, 22, 255), outline=COLORS['accent_green'], width=1)
+    draw.text((1030, 540), "[磁盘 File]", font=f_card_t, fill=COLORS['accent_red'])
+    draw.text((1030, 600), "   || (DMA 拷贝)", font=f_mono, fill=COLORS['text_muted'])
+    draw.text((1030, 650), "   \\/ ", font=f_mono, fill=COLORS['text_muted'])
+    draw.text((1030, 700), "[内核 PageCache 读缓冲区]", font=f_card_t, fill=COLORS['accent_green'])
+    draw.text((1030, 760), "   || (DMA 直传网卡, CPU 0 参与数据搬运！)", font=f_mono, fill=COLORS['accent_cyan'])
+    draw.text((1030, 810), "   \\/ ", font=f_mono, fill=COLORS['text_muted'])
+    draw.text((1030, 860), "[物理网卡 NIC]", font=f_card_t, fill=COLORS['accent_purple'])
 
     img.save(output_path)
     return output_path
 
 def build_scene4(output_path):
-    """场景4: 技术架构与三大核心支柱"""
+    """场景4: Kafka 4 大极速底座卡片」"""
     img = Image.new('RGBA', (WIDTH, HEIGHT), COLORS['bg'])
     draw = ImageDraw.Draw(img)
 
@@ -223,50 +192,62 @@ def build_scene4(output_path):
     f_card_d = get_font(16)
     f_badge = get_font(14)
 
-    draw_capsule(draw, (80, 60, 140, 34), "技术架构支柱", f_badge, COLORS['accent_blue'], (20, 35, 60, 255), COLORS['accent_blue'])
-    draw.text((235, 58), "构建现代自动化音视频流水线", font=f_title, fill=COLORS['text_main'])
-    draw.text((80, 110), "三大核心架构支柱，兼具极速本地性能与无缝多平台云端扩展能力", font=f_sub, fill=COLORS['text_sub'])
+    draw_capsule(draw, (80, 60, 160, 34), "Kafka 极速内核", f_badge, COLORS['accent_purple'], (35, 25, 55, 255), COLORS['accent_purple'])
+    draw.text((255, 58), "Kafka 轻松跑出 200 万级吞吐量的四大技术底座", font=f_title, fill=COLORS['text_main'])
+    draw.text((80, 110), "零拷贝 + PageCache + 顺序写磁盘 + 批量压缩，构建现代高性能消息引擎", font=f_sub, fill=COLORS['text_sub'])
 
     cards = [
         {
             "num": "01",
-            "title": "全无头 CI/CD 自动化",
-            "badge": "无头流水线",
+            "title": "sendfile 零拷贝",
+            "badge": "0 次 CPU 拷贝",
             "b_col": COLORS['accent_blue'],
             "b_bg": (20, 35, 60, 255),
             "points": [
-                "· 无需物理显卡与真实显示器",
-                "· Linux CPU 环境 FFmpeg 极速渲染",
-                "· GitHub Actions 秒级云端批量构建"
+                "· 数据从磁盘内核缓冲区直传网卡",
+                "· 上下文切换减少 50%",
+                "· 内存带宽利用率提升 300%"
             ]
         },
         {
             "num": "02",
-            "title": "毫秒级语音与多轨合成",
-            "badge": "神经语音",
+            "title": "Linux PageCache",
+            "badge": "物理内存缓存",
             "b_col": COLORS['accent_green'],
             "b_bg": (20, 45, 30, 255),
             "points": [
-                "· 接入 Edge-TTS 自然专业神经声线",
-                "· FFmpeg 复合滤镜图多轨合成引擎",
-                "· 动态播放红针与音频波形毫秒卡点"
+                "· 充分利用 Linux 闲置物理内存缓存数据",
+                "· 绝大多数读写直接命中内存",
+                "· 避开 JVM GC 开销与大堆内存停顿"
             ]
         },
         {
             "num": "03",
-            "title": "纯正开源与零豆腐块",
-            "badge": "100% 开源",
+            "title": "顺序写 (Sequential I/O)",
+            "badge": "磁盘追加模式",
             "b_col": COLORS['accent_purple'],
             "b_bg": (35, 25, 55, 255),
             "points": [
-                "· MIT 协议开放，绝无商用版权隐患",
-                "· 挂载文泉驿中文字体杜绝豆腐块",
-                "· 配合 .gitignore 保持 Git 极致轻量"
+                "· 日志文件仅支持追加写入 (Append-only)",
+                "· 彻底消除机械硬盘随机磁头寻道",
+                "· 顺序写磁盘速度堪比内存写入"
+            ]
+        },
+        {
+            "num": "04",
+            "title": "批量合并与压缩",
+            "badge": "高效压缩",
+            "b_col": COLORS['accent_amber'],
+            "b_bg": (40, 30, 15, 255),
+            "points": [
+                "· Producer 端批量打包合并消息",
+                "· 支持 Zstd / Snappy / Gzip 算法",
+                "· 大幅缩减网络 I/O 传输开销"
             ]
         }
     ]
 
-    card_w = 560
+    card_w = 410
     card_h = 760
     card_y = 190
     spacing = 40
@@ -277,19 +258,71 @@ def build_scene4(output_path):
         box = [cx, card_y, cx + card_w, card_y + card_h]
         draw.rounded_rectangle(box, radius=12, fill=COLORS['panel'], outline=COLORS['card_border'], width=1)
         
-        # 头部编号条
-        draw_capsule(draw, (cx + 35, card_y + 35, 55, 30), c['num'], f_badge, c['b_col'], c['b_bg'], c['b_col'])
-        draw_capsule(draw, (cx + 105, card_y + 35, 120, 30), c['badge'], f_badge, c['b_col'], c['b_bg'])
+        draw_capsule(draw, (cx + 30, card_y + 30, 50, 28), c['num'], f_badge, c['b_col'], c['b_bg'], c['b_col'])
+        draw_capsule(draw, (cx + 90, card_y + 30, 130, 28), c['badge'], f_badge, c['b_col'], c['b_bg'])
 
-        # 标题
-        draw.text((cx + 35, card_y + 90), c['title'], font=f_card_t, fill=COLORS['text_main'])
-        draw.line([cx + 35, card_y + 135, cx + card_w - 35, card_y + 135], fill=COLORS['card_border'], width=1)
+        draw.text((cx + 30, card_y + 85), c['title'], font=f_card_t, fill=COLORS['text_main'])
+        draw.line([cx + 30, card_y + 130, cx + card_w - 30, card_y + 130], fill=COLORS['card_border'], width=1)
 
-        # 核心点
-        py = card_y + 160
+        py = card_y + 155
         for pt in c['points']:
-            draw.text((cx + 35, py), pt, font=f_card_d, fill=COLORS['text_sub'])
+            draw.text((cx + 25, py), pt, font=f_card_d, fill=COLORS['text_sub'])
             py += 45
+
+    img.save(output_path)
+    return output_path
+
+def build_scene5(output_path):
+    """场景5: Kafka vs RocketMQ 选型对比表格"""
+    img = Image.new('RGBA', (WIDTH, HEIGHT), COLORS['bg'])
+    draw = ImageDraw.Draw(img)
+
+    f_title = get_font(34)
+    f_sub = get_font(20)
+    f_card_t = get_font(24)
+    f_card_d = get_font(16)
+    f_badge = get_font(14)
+    f_mono = get_font(15)
+
+    draw_capsule(draw, (80, 60, 160, 34), "架构选型对比", f_badge, COLORS['accent_amber'], (40, 30, 15, 255), COLORS['accent_amber'])
+    draw.text((255, 58), "Apache Kafka vs Apache RocketMQ 核心对比与选型指南", font=f_title, fill=COLORS['text_main'])
+    draw.text((80, 110), "依据业务场景选择最匹配的消息存储与高并发处理引擎", font=f_sub, fill=COLORS['text_sub'])
+
+    # 左侧：Kafka
+    box_kafka = [80, 180, 80 + 860, 180 + 780]
+    draw.rounded_rectangle(box_kafka, radius=12, fill=COLORS['panel'], outline=COLORS['accent_purple'], width=1)
+    draw_capsule(draw, (110, 210, 80, 32), "Kafka", f_badge, COLORS['accent_purple'], (35, 25, 55, 255), COLORS['accent_purple'])
+    draw.text((210, 212), "极致吞吐流处理王者", font=f_card_t, fill=COLORS['text_main'])
+    draw.line([110, 260, 910, 260], fill=COLORS['card_border'], width=1)
+
+    kafka_rows = [
+        "· 存储架构：每个 Partition 独立物理文件",
+        "· 适用场景：海量数据日志收集、实时流计算 (Flink/Spark)",
+        "· 吞吐表现：百万级/秒吞吐量，读写全程零拷贝",
+        "· 瓶颈防范：Topic/Partition 上千时，文件数过多导致随机写"
+    ]
+    ky = 290
+    for r in kafka_rows:
+        draw.text((110, ky), r, font=f_card_d, fill=COLORS['text_sub'])
+        ky += 55
+
+    # 右侧：RocketMQ
+    box_rmq = [980, 180, 980 + 860, 180 + 780]
+    draw.rounded_rectangle(box_rmq, radius=12, fill=(15, 28, 22, 255), outline=COLORS['accent_green'], width=1)
+    draw_capsule(draw, (1010, 210, 110, 32), "RocketMQ", f_badge, COLORS['accent_green'], (20, 45, 30, 255), COLORS['accent_green'])
+    draw.text((1140, 212), "金融级业务交易与多 Topic 王者", font=f_card_t, fill=COLORS['text_main'])
+    draw.line([1010, 260, 1810, 260], fill=COLORS['card_border'], width=1)
+
+    rmq_rows = [
+        "· 存储架构：所有 Topic 消息混存入单个 CommitLog 文件",
+        "· 适用场景：核心业务交易、电商订单、分布式事务",
+        "· 特色功能：支持金融级事务消息、延迟队列与死信队列",
+        "· 高并发能力：天然支持上万级 Topic 高并发稳定写入"
+    ]
+    ry = 290
+    for r in rmq_rows:
+        draw.text((1010, ry), r, font=f_card_d, fill=COLORS['text_sub'])
+        ry += 55
 
     img.save(output_path)
     return output_path
