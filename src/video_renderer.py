@@ -1,5 +1,6 @@
 import subprocess
 import os
+from .audio_effects import generate_sfx_pop, generate_sfx_whoosh, generate_sfx_ding, generate_bgm_ambient
 
 def get_audio_duration(audio_path):
     cmd = [
@@ -16,15 +17,26 @@ def get_audio_duration(audio_path):
 
 def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png, audio_mp3, output_mp4):
     os.makedirs(os.path.dirname(os.path.abspath(output_mp4)), exist_ok=True)
+    temp_dir = os.path.dirname(os.path.abspath(audio_mp3))
     
     total_dur = get_audio_duration(audio_mp3)
     print(f"Detected narration audio duration: {total_dur:.2f} seconds")
 
-    # 动态分配 4 个场景的时长占比 (Intro: 15%, CLI 使用方法: 35%, 剪辑器多轨: 30%, 总结: 20%)
+    # 动态生成 SFX 音效与 BGM 背景音乐
+    print(">>> 正在生成高保真 SFX 转场音效与科技 Ambient BGM 背景音乐...")
+    bgm_path = generate_bgm_ambient(os.path.join(temp_dir, "bgm_tech.wav"), duration=int(total_dur) + 10)
+    whoosh_path = generate_sfx_whoosh(os.path.join(temp_dir, "sfx_whoosh.wav"))
+    pop_path = generate_sfx_pop(os.path.join(temp_dir, "sfx_pop.wav"))
+
+    # 动态分配 4 个场景的时长占比
     t1 = round(total_dur * 0.15, 2)
     t2 = round(total_dur * 0.50, 2)
     t3 = round(total_dur * 0.80, 2)
     t4 = round(total_dur, 2)
+
+    t1_ms = int(t1 * 1000)
+    t2_ms = int(t2 * 1000)
+    t3_ms = int(t3 * 1000)
 
     filter_complex = (
         f"[0:v]loop=loop=-1:size=2:start=0,setpts=PTS-STARTPTS[v0];"
@@ -39,7 +51,13 @@ def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png,
         f"[v_scene3]trim=start={t2}:end={t3},setpts=PTS-STARTPTS[part3];"
         f"[v_scene4]trim=start={t3}:end={t4},setpts=PTS-STARTPTS[part4];"
         f"[part1][part2][part3][part4]concat=n=4:v=1:a=0[v_concat];"
-        f"[v_concat]format=yuv420p[v_out]"
+        f"[v_concat]format=yuv420p[v_out];"
+        f"[5:a]volume=1.0[a_voice];"
+        f"[6:a]volume=0.10,atrim=start=0:end={t4}[a_bgm];"
+        f"[7:a]adelay={t1_ms}|{t1_ms},volume=0.7[sfx1];"
+        f"[7:a]adelay={t2_ms}|{t2_ms},volume=0.7[sfx2];"
+        f"[8:a]adelay={t3_ms}|{t3_ms},volume=0.7[sfx3];"
+        f"[a_voice][a_bgm][sfx1][sfx2][sfx3]amix=inputs=5:duration=first:dropout_transition=2[a_out]"
     )
 
     cmd = [
@@ -50,9 +68,12 @@ def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png,
         '-loop', '1', '-i', scene3_png,
         '-loop', '1', '-i', scene4_png,
         '-i', audio_mp3,
+        '-i', bgm_path,
+        '-i', whoosh_path,
+        '-i', pop_path,
         '-filter_complex', filter_complex,
         '-map', '[v_out]',
-        '-map', '5:a',
+        '-map', '[a_out]',
         '-c:v', 'libx264',
         '-preset', 'fast',
         '-crf', '22',
@@ -63,7 +84,7 @@ def render_final_video(scene1_png, logo_png, scene2_png, scene3_png, scene4_png,
         output_mp4
     ]
 
-    print("Running FFmpeg rendering command...")
+    print("Running FFmpeg rendering command with multi-track BGM and SFX...")
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         print("FFmpeg stderr:", res.stderr)
