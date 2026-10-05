@@ -15,6 +15,8 @@
   - 逼真的多轨道视图：视频轨、动态声波高低振幅音频轨、逐字字幕轨；
   - 动态红色播放指针 (Playhead)：时间轴匀速平滑位移，还原专业剪辑操作流程；
   - AI Agent 终端自动化代码视窗与实时监视窗口。
+- **公网即时预览上传 (Uguu Upload Integration)**：
+  - 支持通过 `--upload` 参数将生成的视频一键上传至 Uguu 公网平台，毫秒级输出在线预览 URL。
 - **毫秒级云端语音旁白 (Edge-TTS)**：
   - 接入高质量微软神经语音（`zh-CN-YunxiNeural`），语调自然专业。
 - **仓库极致轻量铁律**：
@@ -35,9 +37,10 @@ opencut-video-generator/
 │   ├── __init__.py
 │   ├── config.py            # 分辨率(1080P)、帧率(25FPS)、色盘与分镜时序配置
 │   ├── tts.py               # 边缘 TTS 语音合成管线
-│   ├── scene_builder.py     # 多场景分镜排版 (Intro / 实景多轨 / 架构卡片)
-│   └── video_renderer.py    # FFmpeg Complex Filtergraph 复合滤镜多轨合成引擎
-├── generate.py              # 命令行一键生成入口
+│   ├── scene_builder.py     # 多场景分镜排版 (Intro / CLI使用方法 / 实景多轨 / 架构卡片)
+│   ├── video_renderer.py    # FFmpeg Complex Filtergraph 复合滤镜多轨合成引擎
+│   └── uploader.py          # Uguu 公网临时托管自动上传与预览模块
+├── generate.py              # 命令行一键生成与公网上传入口
 ├── requirements.txt         # 核心依赖清单
 ├── .gitignore               # 严格的二进制音视频与临时缓存隔离规则
 └── README.md                # 完整工程技术文档
@@ -59,20 +62,21 @@ sudo apt-get update && sudo apt-get install -y ffmpeg fonts-wqy-microhei
 pip install -r requirements.txt
 ```
 
-### 2. 一键生成视频
+### 2. 一键生成视频与公网预览
 
-直接运行默认脚本生成完整的 1080P 多分镜演示视频：
+运行默认脚本生成完整的 1080P 多分镜演示视频，并自动上传生成公网预览链接：
 
 ```bash
-python3 generate.py
+python3 generate.py --upload
 ```
 
-自定义配音台词与输出路径：
+自定义配音台词、输出路径并一键生成预览链接：
 
 ```bash
 python3 generate.py \
   --text "大家好，这是自定义的一键生成技术视频！" \
-  --output "output/my_custom_video.mp4"
+  --output "output/my_custom_video.mp4" \
+  --upload
 ```
 
 ---
